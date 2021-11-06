@@ -1,5 +1,6 @@
 # two-faces
-This project is inspired by the coding problem in MD5 Collision Attack Lab of SEEDLab. 
+
+This project is inspired by the coding problem in MD5 Collision Attack Lab of SEEDLab.
 This program generates two versions of a program with the same MD5 hash but one can execute malicious code.
 
 ## Requirements
@@ -18,3 +19,8 @@ python3 two-faces -f <filename> -t <tag> -n <length of tag array>
 
 It will generate two executable files `a1.out` and `a2.out`, one is benign and one can execute malicious code in the
 program.
+
+## Future development
+
+I will look into how to build tool for MD5 Collision Attack in Python based on
+a research paper by Marc Stevens (he is also the creator of `md5collgen`).
