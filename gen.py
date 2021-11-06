@@ -78,45 +78,49 @@ class GenFiles:
         that contains malicious code but one can execute malicious code.
         '''
 
-        run(f'[ ! -d {self.RESULT_DIR} ] && mkdir {self.RESULT_DIR}', shell=True)
+        try:
+            run(f'[ ! -d {self.RESULT_DIR} ] && mkdir {self.RESULT_DIR}', shell=True)
 
-        self.read_byte_stream()
+            self.read_byte_stream()
 
-        start_end = self.get_tag_arrays_location()
+            start_end = self.get_tag_arrays_location()
 
-        assert len(start_end) == 2, "Program has to have two tag arrays."
+            assert len(start_end) == 2, "Program has to have two tag arrays."
 
-        s1, e1 = start_end[0]
-        s2, e2 = start_end[1]
+            s1, e1 = start_end[0]
+            s2, e2 = start_end[1]
 
-        offset = self.get_array_offset(s1)
-        prefix_size = self.get_prefix_size(s1, offset)
-        suffix_size = self.get_suffix_size(len(self.BYTE_STREAM), prefix_size)
+            offset = self.get_array_offset(s1)
+            prefix_size = self.get_prefix_size(s1, offset)
+            suffix_size = self.get_suffix_size(len(self.BYTE_STREAM), prefix_size)
 
-        # get the prefix and the suffix of the executable file
-        run(f'head -c {prefix_size} {self.FILENAME} > {self.RESULT_DIR}/prefix', shell=True)
-        run(f'tail -c {suffix_size} {self.FILENAME} > {self.RESULT_DIR}/suffix', shell=True)
+            # get the prefix and the suffix of the executable file
+            run(f'head -c {prefix_size} {self.FILENAME} > {self.RESULT_DIR}/prefix', shell=True)
+            run(f'tail -c {suffix_size} {self.FILENAME} > {self.RESULT_DIR}/suffix', shell=True)
 
-        # generate two files with the same md5 using prefix as prefixfile
-        run(f'md5collgen -p {self.RESULT_DIR}/prefix -o {self.RESULT_DIR}/prefix_P {self.RESULT_DIR}/prefix_Q', shell=True)
+            # generate two files with the same md5 using prefix as prefixfile
+            run(f'md5collgen -p {self.RESULT_DIR}/prefix -o {self.RESULT_DIR}/prefix_P {self.RESULT_DIR}/prefix_Q', shell=True)
 
-        # get P and Q (the 128 bytes generate by md5collgen) from prefix_P and prefix_Q
-        run(f'tail -c 128 {self.RESULT_DIR}/prefix_P > {self.RESULT_DIR}/P', shell=True)
-        run(f'tail -c 128 {self.RESULT_DIR}/prefix_Q > {self.RESULT_DIR}/Q', shell=True)
+            # get P and Q (the 128 bytes generate by md5collgen) from prefix_P and prefix_Q
+            run(f'tail -c 128 {self.RESULT_DIR}/prefix_P > {self.RESULT_DIR}/P', shell=True)
+            run(f'tail -c 128 {self.RESULT_DIR}/prefix_Q > {self.RESULT_DIR}/Q', shell=True)
 
-        # get the starting position of Y with offset relative to starting position
-        # of suffix
-        # get the end position of 128 bytes from the starting position of Y with
-        # offset
-        s2_P = s2 - 128 - prefix_size + offset
-        e2_P = s2_P + 128
+            # get the starting position of Y with offset relative to starting position
+            # of suffix
+            # get the end position of 128 bytes from the starting position of Y with
+            # offset
+            s2_P = s2 - 128 - prefix_size + offset
+            e2_P = s2_P + 128
 
-        # insert P in the middle of array Y in the suffix
-        run(f'head -c {s2_P} {self.RESULT_DIR}/suffix > {self.RESULT_DIR}/suffix_pre', shell=True)
-        run(f'tail -c +{e2_P} {self.RESULT_DIR}/suffix > {self.RESULT_DIR}/suffix_post', shell=True)
-        run(f'cat {self.RESULT_DIR}/suffix_pre {self.RESULT_DIR}/P {self.RESULT_DIR}/suffix_post > {self.RESULT_DIR}/suffix_P', shell=True)
+            # insert P in the middle of array Y in the suffix
+            run(f'head -c {s2_P} {self.RESULT_DIR}/suffix > {self.RESULT_DIR}/suffix_pre', shell=True)
+            run(f'tail -c +{e2_P} {self.RESULT_DIR}/suffix > {self.RESULT_DIR}/suffix_post', shell=True)
+            run(f'cat {self.RESULT_DIR}/suffix_pre {self.RESULT_DIR}/P {self.RESULT_DIR}/suffix_post > {self.RESULT_DIR}/suffix_P', shell=True)
 
-        # concat prefix_p and prefix_Q with suffix_P to create two new executable
-        # files a1.out and a2.out with the same md5 hash
-        run(f'cat {self.RESULT_DIR}/prefix_P {self.RESULT_DIR}/suffix_P > a1.out', shell=True)
-        run(f'cat {self.RESULT_DIR}/prefix_Q {self.RESULT_DIR}/suffix_P > a2.out', shell=True)
+            # concat prefix_p and prefix_Q with suffix_P to create two new executable
+            # files a1.out and a2.out with the same md5 hash
+            run(f'cat {self.RESULT_DIR}/prefix_P {self.RESULT_DIR}/suffix_P > a1.out', shell=True)
+            run(f'cat {self.RESULT_DIR}/prefix_Q {self.RESULT_DIR}/suffix_P > a2.out', shell=True)
+
+        except Exception as e:
+            print(e)
